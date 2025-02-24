@@ -35,8 +35,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <Navbar />
         <AuthProvider>
+          <Navbar />
           {children}
         </AuthProvider>
         <ScrollRestoration />

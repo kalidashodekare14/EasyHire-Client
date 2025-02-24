@@ -6,5 +6,6 @@ export default [
     route("/service", "pages/Services.jsx"),
     route("/login", "pages/Login.jsx"),
     route("/signup", "pages/SignUp.jsx"),
+    route("/profile", "pages/UserProfile.jsx"),
 
 ] satisfies RouteConfig;

@@ -1,14 +1,24 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { FaBars } from 'react-icons/fa'
 import { IoSearchOutline } from 'react-icons/io5'
 import { Link, useLocation } from 'react-router'
+import { authContext } from '../AuthProvider/AuthProvider'
 
 const Navbar = () => {
 
   const [toggle, setToggle] = useState(false)
   const { pathname } = useLocation()
+  const { user } = useContext(authContext)
+  const [profileToggle, setProfileToggle] = useState(false)
+
+  console.log(user?.email)
+
   const handleToggle = () => {
     setToggle(!toggle)
+  }
+
+  const handleProfileToggle = () => {
+    setProfileToggle(!profileToggle)
   }
 
   const naviLinks = [
@@ -48,9 +58,29 @@ const Navbar = () => {
           </ul>
         </div>
         <div className='flex items-center gap-5 text-[19px]'>
-          <Link to={"/login"}>
-            <button className='btn w-32 bg-[#307bc4] border-0 text-white font-rubik'>Login</button>
-          </Link>
+          {
+            user?.email ? (
+              <div className='relative w-full'>
+                <div onClick={handleProfileToggle} className='w-12 cursor-pointer'>
+                  <img src="https://i.ibb.co.com/WcTWxsN/nav-img.png" alt="" />
+                </div>
+                <div className={`${profileToggle !== true && 'hidden duration-300'} absolute right-0 top-14 w-40 p-2 shadow-lg bg-white `}>
+                  <Link to={'/profile'}>
+                    <p className='text-[17px] my-2'>Profile</p>
+                  </Link>
+                  <Link to={''}>
+                    <p className='text-[17px]'>Dashboard</p>
+                  </Link>
+                </div>
+              </div>
+
+            ) : (
+              <Link to={"/login"}>
+                <button className='btn w-32 bg-[#307bc4] border-0 text-white font-rubik'>Login</button>
+              </Link>
+            )
+          }
+
           <FaBars onClick={handleToggle} className='lg:hidden' />
         </div>
         <ul className={`z-50 absolute left-0 p-5 lg:hidden  bg-[#307bc4] text-white w-full flex flex-col  gap-5 text-[19px] font-[300] translate-y-14 duration-700  ${toggle ? "translate-x-0" : "-translate-x-full"}`}>
@@ -62,8 +92,8 @@ const Navbar = () => {
             ))
           }
         </ul>
-      </nav>
-    </div>
+      </nav >
+    </div >
   )
 }
 

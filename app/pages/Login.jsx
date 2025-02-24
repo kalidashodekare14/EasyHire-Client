@@ -30,7 +30,7 @@ const Login = () => {
             const res = await axiosSecure.post('/api/user/login', userInfo)
             if (res.data.success) {
                 console.log(res.data)
-                localStorage.setItem('token', res.data.token)
+                localStorage.setItem('token', res.data.data.token)
                 Swal.fire({
                     position: "center",
                     icon: "success",
