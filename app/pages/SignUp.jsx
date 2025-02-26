@@ -52,7 +52,7 @@ const Register = () => {
                     try {
                         setProcessing(true)
                         console.log(res.user)
-                        const userRes = await axiosPublic.post(`/api/user/register`, userInfo)
+                        const userRes = await axiosPublic.post(`/user-register`, userInfo)
                         console.log(userRes)
                         if (userRes.data.success) {
                             Swal.fire({

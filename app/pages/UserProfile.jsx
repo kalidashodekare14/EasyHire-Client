@@ -3,15 +3,18 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { Modal } from 'react-responsive-modal';
 import 'react-tabs/style/react-tabs.css';
 import 'react-responsive-modal/styles.css';
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useForm } from "react-hook-form"
 import Select from 'react-select';
 import { IoMdAdd } from "react-icons/io";
-
-
+import useAxiosSecure from '../hooks/useAxiosSecure'
+import { authContext } from '../AuthProvider/AuthProvider'
 
 const UserProfile = () => {
 
+    const { user } = useContext(authContext)
+    const [skills, setSkills] = useState([])
+    const axiosSecure = useAxiosSecure()
     const options = [
         { value: 'HTML', label: 'HTML' },
         { value: 'CSS', label: 'CSS' },
@@ -22,6 +25,24 @@ const UserProfile = () => {
         { value: 'Express.js', label: 'Express.js' },
         { value: 'MongoDB.js', label: 'MongoDB.js' }
     ]
+    const [userData, setUserData] = useState([])
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await axiosSecure.get(`/user-profile/${user?.email}`)
+                console.log(res.data)
+                setUserData(res.data)
+
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchProfile()
+    }, [user?.email])
+
+
+    console.log('checking email', user?.email)
 
     // Personal Information
     const [piOpen, piSetOpen] = useState(false);
@@ -56,8 +77,23 @@ const UserProfile = () => {
         formState: { errorsPI },
     } = useForm()
 
-    const onPersonalInformation = (data) => {
-        console.log(data)
+    const onPersonalInformation = async (data) => {
+        try {
+            console.log(data)
+            const pIData = {
+                name: data.name,
+                email: data.email,
+                phone_number: data.phone_number,
+                address: data.address
+            }
+            const res = await axiosSecure.patch(`/user_personal_information/${user?.email}`, pIData)
+            console.log(res.data)
+            if (res.modifiedCount > 0) {
+                piSetOpen(false)
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     // Professional Information Form
@@ -67,8 +103,22 @@ const UserProfile = () => {
         formState: { errorsPro },
     } = useForm()
 
-    const onProfessionalInformation = (data) => {
+    const onProfessionalInformation = async (data) => {
         console.log(data)
+        try {
+            const proData = {
+                job_title: data.job_title,
+                work_experience: data.work_experience,
+                skills: skills.map(skill => skill.value)
+            }
+            const res = await axiosSecure.patch(`/user_professional_information/${user?.email}`, proData)
+            console.log(res.data)
+            if (res.modifiedCount > 0) {
+                piSetOpen(false)
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     // Education Form
@@ -78,8 +128,24 @@ const UserProfile = () => {
         formState: { errorsEdu },
     } = useForm()
 
-    const onEducation = (data) => {
-        console.log(data)
+    const onEducation = async (data) => {
+        try {
+            console.log(data)
+            const educationInfo = {
+                degree_name: data.degree_name,
+                university: data.university,
+                year_of_passing: data.year_of_passing,
+                gpa: data.gpa
+            }
+            const res = await axiosSecure.patch(`/user_education/${user?.email}`, educationInfo)
+            console.log(res.data)
+            if (res.modifiedCount > 0) {
+                piSetOpen(false)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+
     }
 
     // Projects Form
@@ -100,8 +166,21 @@ const UserProfile = () => {
         formState: { errorsCert },
     } = useForm()
 
-    const onCertifications = (data) => {
+    const onCertifications = async (data) => {
         console.log(data)
+        try {
+            const certificatInfo = {
+                certificate_name: data.certificate_name,
+                online_courses: data.online_courses
+            }
+            const res = await axiosSecure.patch(`/certificationAndTraining/${user?.email}`, certificatInfo)
+            console.log(res.data)
+            if (res.modifiedCount > 0) {
+                piSetOpen(false)
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     return (
@@ -130,31 +209,31 @@ const UserProfile = () => {
                                 <div>
                                     <label htmlFor="">Name:</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>Kalidash Odekare</p>
+                                        <p>{userData?.name || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Email</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>kalidashodekare14@gmail.com</p>
+                                        <p>{userData?.email || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Role</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>Student</p>
+                                        <p>{userData?.role}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Phone Number</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>+8801754875698</p>
+                                        <p>{userData?.phone_number || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Address</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>Dhaka,Bangladesh</p>
+                                        <p>{userData?.address || "N/A"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -169,24 +248,28 @@ const UserProfile = () => {
                                 <div>
                                     <label htmlFor="">Current Job Title:</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>Web Developer</p>
+                                        <p>{userData?.job_title || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Work Experience</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>1 Years</p>
+                                        <p>{userData?.work_experience || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Skill</label>
                                     <div className='border border-[#bbb] p-3'>
                                         <div className='grid grid-cols-4 gap-3'>
-                                            <p>React.js</p>
-                                            <p>Next.js</p>
-                                            <p>Node.js</p>
-                                            <p>Express.js</p>
-                                            <p>MongoDB</p>
+                                            {
+                                                userData?.skills ? (
+                                                    userData?.skills.map((skill, index) => (
+                                                        <p key={index}>{skill}</p>
+                                                    ))
+                                                ) : (
+                                                    "N/A"
+                                                )
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -202,25 +285,25 @@ const UserProfile = () => {
                                 <div>
                                     <label htmlFor="">Degree Name:</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>Web Developer</p>
+                                        <p>{userData?.degree_name || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">University/Institution</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>1 Years</p>
+                                        <p>{userData?.university || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Year of Passing</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>1 Years</p>
+                                        <p>{userData?.year_of_passing || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">GPA/Percentage</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>1 Years</p>
+                                        <p>{userData?.gpa || "N/A"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -243,13 +326,13 @@ const UserProfile = () => {
                                 <div>
                                     <label htmlFor=""> Online Courses: </label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>Web Developer</p>
+                                        <p>{userData?.online_courses || "N/A"}</p>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="">Certificate Name & Organization:</label>
                                     <div className='border border-[#bbb] p-3'>
-                                        <p>1 Years</p>
+                                        <p>{userData?.certificate_name || "N/A"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -261,19 +344,19 @@ const UserProfile = () => {
                     <form onSubmit={handlePISubmit(onPersonalInformation)} className='my-5 lg:w-72'>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Name:</label>
-                            <input {...registerPI("name")} className='input w-full' type="text" />
+                            <input {...registerPI("name")} defaultValue={userData?.name} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Email:</label>
-                            <input {...registerPI("email")} className='input w-full' type="email" />
+                            <input {...registerPI("email")} defaultValue={userData?.email} className='input w-full' type="email" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Phone:</label>
-                            <input {...registerPI("phone_number")} className='input w-full' type="text" />
+                            <input {...registerPI("phone_number")} defaultValue={userData?.phone_number} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Address:</label>
-                            <input {...registerPI("address")} className='input w-full' type="text" />
+                            <input {...registerPI("address")} defaultValue={userData?.address} className='input w-full' type="text" />
                         </div>
                         <div className='text-center my-5'>
                             <button type='submit' className='btn'>Submit</button>
@@ -286,26 +369,28 @@ const UserProfile = () => {
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Current Job Title:</label>
                             <div className=''>
-                                <select className='w-full p-3'>
+                                <select {...registerPro("job_title")} defaultValue={userData?.job_title} className='w-full p-3'>
                                     <option disabled value={""} >Please Select</option>
-                                    <option value="Student">Frontend Developer</option>
-                                    <option value="Student">Backend Developer</option>
-                                    <option value="Teacher">Web Developer</option>
-                                    <option value="Developer">MERN Stack Developer</option>
-                                    <option value="Designer">Full Stack Developer</option>
-                                    <option value="Designer">Software Developer</option>
-                                    <option value="Designer">Software Engineer</option>
+                                    <option value="Frontend Developer">Frontend Developer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                    <option value="Web Developer">Web Developer</option>
+                                    <option value="MERN Stack Developer">MERN Stack Developer</option>
+                                    <option value="Full Stack Developer">Full Stack Developer</option>
+                                    <option value="Software Developer">Software Developer</option>
+                                    <option value="Software Engineer">Software Engineer</option>
                                 </select>
                             </div>
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Work Experience:</label>
-                            <input {...registerPro("work_experience")} className='input w-full' type="text" />
+                            <input {...registerPro("work_experience")} defaultValue={userData?.work_experience || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Skill:</label>
                             <Select
                                 isMulti
+                                defaultInputValue={userData?.skills || "N/A"}
+                                onChange={(e) => setSkills(e)}
                                 name="colors"
                                 options={options}
                                 className="basic-multi-select"
@@ -322,19 +407,19 @@ const UserProfile = () => {
                     <form onSubmit={handleEduSubmit(onEducation)} className='my-5 lg:w-96 space-y-3'>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Degree Name:</label>
-                            <input {...registerEdu("degree_name")} className='input w-full' type="text" />
+                            <input {...registerEdu("degree_name")} defaultValue={userData?.degree_name || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">University/Institution:</label>
-                            <input {...registerEdu("university")} className='input w-full' type="text" />
+                            <input {...registerEdu("university")} defaultValue={userData?.university || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Year of Passing:</label>
-                            <input {...registerEdu("year_of_passing")} className='input w-full' type="text" />
+                            <input {...registerEdu("year_of_passing")} defaultValue={userData?.year_of_passing || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">GPA/Percentage:</label>
-                            <input {...registerEdu("gpa")} className='input w-full' type="text" />
+                            <input {...registerEdu("gpa")} defaultValue={userData?.gpa || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='text-center my-5'>
                             <button type='submit' className='btn'>Submit</button>
@@ -370,11 +455,11 @@ const UserProfile = () => {
                     <form onSubmit={handleCertSubmit(onCertifications)} className='my-5 lg:w-96 space-y-3'>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Online Courses:</label>
-                            <input {...registerCert("online_courses")} className='input w-full' type="text" />
+                            <input {...registerCert("online_courses")} defaultValue={userData?.online_courses || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Certificate Name & Organization:</label>
-                            <input {...registerCert("certificate_name")} className='input w-full' type="text" />
+                            <input {...registerCert("certificate_name")} defaultValue={userData?.certificate_name || "N/A"} className='input w-full' type="text" />
                         </div>
                         <div className='text-center my-5'>
                             <button type='submit' className='btn'>Submit</button>

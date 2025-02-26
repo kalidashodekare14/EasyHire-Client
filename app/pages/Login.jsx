@@ -27,7 +27,7 @@ const Login = () => {
             const fireLogin = await userLoginSystem(data.email, data.password)
             console.log(fireLogin.user)
 
-            const res = await axiosSecure.post('/api/user/login', userInfo)
+            const res = await axiosSecure.post('/user-login', userInfo)
             if (res.data.success) {
                 console.log(res.data)
                 localStorage.setItem('token', res.data.data.token)

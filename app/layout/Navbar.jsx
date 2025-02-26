@@ -8,7 +8,7 @@ const Navbar = () => {
 
   const [toggle, setToggle] = useState(false)
   const { pathname } = useLocation()
-  const { user } = useContext(authContext)
+  const { user, userLogOut } = useContext(authContext)
   const [profileToggle, setProfileToggle] = useState(false)
 
   console.log(user?.email)
@@ -38,6 +38,12 @@ const Navbar = () => {
       route: '/service',
     }
   ]
+
+  const handleLogOut = () => {
+    localStorage.removeItem('token')
+    window.location.reload()
+    userLogOut()
+  }
 
   return (
     <div>
@@ -69,8 +75,9 @@ const Navbar = () => {
                     <p className='text-[17px] my-2'>Profile</p>
                   </Link>
                   <Link to={''}>
-                    <p className='text-[17px]'>Dashboard</p>
+                    <p className='text-[17px] my-2'>Dashboard</p>
                   </Link>
+                  <p onClick={handleLogOut} className='text-[17px] cursor-pointer'>Log Out</p>
                 </div>
               </div>
 
