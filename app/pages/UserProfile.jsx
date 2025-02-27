@@ -1,4 +1,4 @@
-import { FaEdit } from 'react-icons/fa';
+import { FaCamera, FaEdit } from 'react-icons/fa';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { Modal } from 'react-responsive-modal';
 import 'react-tabs/style/react-tabs.css';
@@ -6,9 +6,11 @@ import 'react-responsive-modal/styles.css';
 import { useContext, useEffect, useState } from 'react';
 import { useForm } from "react-hook-form"
 import Select from 'react-select';
-import { IoMdAdd } from "react-icons/io";
+import { IoMdAdd, IoMdCamera } from "react-icons/io";
 import useAxiosSecure from '../hooks/useAxiosSecure'
 import { authContext } from '../AuthProvider/AuthProvider'
+import { Link } from 'react-router';
+
 
 const UserProfile = () => {
 
@@ -26,6 +28,7 @@ const UserProfile = () => {
         { value: 'MongoDB.js', label: 'MongoDB.js' }
     ]
     const [userData, setUserData] = useState([])
+    const [imgHostLoading, setImgHostLoading] = useState(false)
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -155,8 +158,19 @@ const UserProfile = () => {
         formState: { errorsProj },
     } = useForm()
 
-    const onProjects = (data) => {
+    const onProjects = async (data) => {
         console.log(data)
+        const projectInfo = {
+            project_title: data.project_title,
+            project_description: data.project_description,
+            live_link: data.live_link,
+            github_link: data.github_link
+        }
+        const res = await axiosSecure.post(`/projectsAdd/${user?.email}`, projectInfo)
+        console.log(res.data)
+        if (res.modifiedCount > 0) {
+            piSetOpen(false)
+        }
     }
 
     // Certifications & Training Form
@@ -183,14 +197,54 @@ const UserProfile = () => {
         }
     }
 
+    const handleUploadImage = async (file) => {
+        try {
+            setImgHostLoading(true)
+            const formData = new FormData();
+            formData.append("image", file)
+
+            const res = await axiosSecure.post(`/upload-image/${user?.email}`, formData)
+            console.log(res.data)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setImgHostLoading(false)
+        }
+    }
+
     return (
         <div className='lg:mx-32'>
             <div className='h-40 w-full bg-[#307bc4]'>
             </div>
-            <div className='w-32 -mt-10'>
-                <img src="https://i.ibb.co.com/WcTWxsN/nav-img.png" alt="" />
+            <div className='relative  w-32 h-32 rounded-full -mt-10'>
+                {
+                    userData?.image ? (
+                        <div className='z-10 h-32'>
+                            <img className='rounded-full w-full h-full' src={userData?.image} alt="" />
+                        </div>
+                    ) : (
+                        <div className='z-10'>
+                            <img className='w-full h-full' src="https://i.ibb.co.com/WcTWxsN/nav-img.png" alt="" />
+                        </div>
+                    )
+                }
+                {
+                    imgHostLoading ? (
+                        <div className='bg-[#307bc4] text-white rounded-full z-20 absolute bottom-0 right-0 cursor-pointer'>
+                            <span className="loading loading-spinner w-10 h-10"></span>
+                        </div>
+                    ) : (
+                        <div>
+                            <div onClick={() => document.querySelector('input[type="file"]').click()} className='z-20 absolute bottom-0 right-0 cursor-pointer bg-white rounded-full p-2'>
+                                <FaCamera className='text-3xl text-[#307bc4]' />
+                                <input onChange={(e) => handleUploadImage(e.target.files[0])} hidden type="file" name="" id="" />
+                            </div>
+                        </div>
+
+                    )
+                }
             </div>
-            <div>
+            <div className='font-rubik my-10'>
                 <Tabs>
                     <TabList>
                         <Tab>Personal Information</Tab>
@@ -313,7 +367,21 @@ const UserProfile = () => {
                         <div className='flex justify-end items-end text-2xl px-5 cursor-pointer'>
                             <IoMdAdd onClick={onProjOpenModal} />
                         </div>
-                        <div>
+                        <div className='space-y-5'>
+                            {
+                                userData?.projects?.length > 0 && userData?.projects.map(project => (
+                                    <div key={project._id} className='border-b border-[#bbb] font-rubik  pb-5 space-y-3'>
+                                        <h1 className='font-medium'>{project?.project_title}</h1>
+                                        <p className='whitespace-pre-wrap overflow-hidden break-words'>{project?.project_description}</p>
+                                        <p className='font-medium'>
+                                            Live Link: <Link to={project?.live_link}>{project?.live_link}</Link>
+                                        </p>
+                                        <p className='font-medium'>
+                                            GitHub Link: <Link to={project?.live_link}>{project?.github_link}</Link>
+                                        </p>
+                                    </div>
+                                ))
+                            }
 
                         </div>
                     </TabPanel>
@@ -428,22 +496,22 @@ const UserProfile = () => {
                 </Modal>
                 {/* Projects */}
                 <Modal open={projOpen} onClose={onProjCloseModal} center>
-                    <form onSubmit={handleProjSubmit(onProjects)} className='my-5 lg:w-[500px] space-y-3'>
+                    <form onSubmit={handleProjSubmit(onProjects)} className='my-5 lg:w-[600px] space-y-3'>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Project Title:</label>
                             <input {...registerProj("project_title")} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Project Description:</label>
-                            <textarea {...registerProj("project_description")} className='input w-full h-40' type="text" />
+                            <textarea {...registerProj("project_description")} className='overflow-auto break-words resize-y whitespace-normal input w-full h-40' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">Live Link:</label>
-                            <input {...registerProj("project_link")} className='input w-full' type="text" />
+                            <input {...registerProj("live_link")} className='input w-full' type="text" />
                         </div>
                         <div className='flex flex-col gap-2 w-full'>
                             <label htmlFor="">GitHub Link:</label>
-                            <input {...registerProj("project_link")} className='input w-full' type="text" />
+                            <input {...registerProj("github_link")} className='input w-full' type="text" />
                         </div>
                         <div className='text-center my-5'>
                             <button type='submit' className='btn'>Submit</button>
@@ -467,7 +535,7 @@ const UserProfile = () => {
                     </form>
                 </Modal>
             </div>
-        </div>
+        </div >
     )
 }
 
